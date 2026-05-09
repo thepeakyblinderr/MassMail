@@ -14,7 +14,7 @@ if errorlevel 1 (
 )
 
 echo Python found. Installing dependencies...
-pip install -r requirements.txt
+pip install PyQt6 openpyxl keyring pyinstaller
 
 echo.
 echo ============================================

@@ -11,9 +11,10 @@ from PyQt6.QtWidgets import (
 )
 
 from .editor import RichTextEditor
-from .email_sender import EmailSenderThread
+from .email_sender import EmailSenderThread, SMTP_PROVIDERS
 from .excel_reader import load_vendors
 from .preview_dialog import PreviewDialog
+from .settings_dialog import SettingsDialog, load_settings, settings_complete
 from .vendor_table import VendorTable
 
 STYLE = """
@@ -178,7 +179,7 @@ class MainWindow(QMainWindow):
         title = QLabel("MassMail")
         title.setObjectName("header_title")
         title.setStyleSheet("font-size:22px; font-weight:bold; color:#ffffff;")
-        sub = QLabel("Send personalised bulk emails to all your vendors — powered by Outlook")
+        sub = QLabel("Send personalised bulk emails to all your vendors — no Outlook needed")
         sub.setStyleSheet("font-size:12px; color:#bfdbfe;")
         left.addWidget(title)
         left.addWidget(sub)
@@ -189,6 +190,15 @@ class MainWindow(QMainWindow):
             "background:#1d4ed8; color:#ffffff; border-radius:12px; padding:4px 14px; font-size:13px;"
         )
         h.addWidget(self.vendor_count_badge)
+
+        settings_btn = QPushButton("⚙️  Settings")
+        settings_btn.setStyleSheet(
+            "background:#1d4ed8; color:#ffffff; border:1px solid #93c5fd;"
+            "border-radius:8px; padding:6px 14px; font-size:13px;"
+        )
+        settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        settings_btn.clicked.connect(self._open_settings)
+        h.addWidget(settings_btn)
         return w
 
     def _build_left_panel(self) -> QWidget:
@@ -347,6 +357,10 @@ class MainWindow(QMainWindow):
         dlg = PreviewDialog(self.vendors, subject, html, self)
         dlg.exec()
 
+    def _open_settings(self):
+        dlg = SettingsDialog(self)
+        dlg.exec()
+
     def _send_emails(self):
         if not self.vendors:
             QMessageBox.warning(self, "No Vendors", "Please upload an Excel file first.")
@@ -360,9 +374,21 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Empty Body", "Please compose an email body.")
             return
 
+        if not settings_complete():
+            QMessageBox.warning(
+                self, "Settings Required",
+                "Please configure your email settings first.\n\nClick the ⚙️ Settings button."
+            )
+            self._open_settings()
+            return
+
+        s = load_settings()
+        host, port = SMTP_PROVIDERS[s["provider"]]
+
         reply = QMessageBox.question(
             self, "Confirm Send",
             f"Send email to <b>{len(self.vendors)}</b> vendors?<br><br>"
+            f"From: <i>{s['email']}</i><br>"
             f"Subject: <i>{subject}</i>",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
         )
@@ -377,7 +403,10 @@ class MainWindow(QMainWindow):
         self._failed = 0
 
         self.sender_thread = EmailSenderThread(
-            self.vendors, subject, html, self.attachments
+            self.vendors, subject, html, self.attachments,
+            smtp_host=host, smtp_port=port,
+            email=s["email"], password=s["password"],
+            sender_name=s["sender_name"] or s["email"],
         )
         self.sender_thread.progress.connect(self._on_progress)
         self.sender_thread.finished.connect(self._on_finished)

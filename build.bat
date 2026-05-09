@@ -9,9 +9,8 @@ pyinstaller ^
   --onefile ^
   --windowed ^
   --name "MassMail" ^
-  --hidden-import win32com.client ^
-  --hidden-import win32com.server ^
-  --hidden-import pythoncom ^
+  --hidden-import keyring.backends.Windows ^
+  --hidden-import keyring.backends ^
   --hidden-import openpyxl ^
   main.py
 
