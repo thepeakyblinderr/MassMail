@@ -1,6 +1,6 @@
 @echo off
 echo Installing dependencies...
-pip install -r requirements.txt
+pip install PyQt6 openpyxl keyring pyinstaller
 
 echo.
 echo Building MassMail.exe ...
@@ -9,9 +9,12 @@ pyinstaller ^
   --onefile ^
   --windowed ^
   --name "MassMail" ^
-  --hidden-import keyring.backends.Windows ^
+  --collect-all keyring ^
+  --collect-all openpyxl ^
+  --hidden-import keyring ^
   --hidden-import keyring.backends ^
-  --hidden-import openpyxl ^
+  --hidden-import keyring.backends.Windows ^
+  --hidden-import keyring.backends.fail ^
   main.py
 
 echo.
