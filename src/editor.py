@@ -38,6 +38,14 @@ class RichTextEditor(QWidget):
                 color: #1f2937;
             }
         """)
+        # Force dark text regardless of system theme
+        self.editor.document().setDefaultStyleSheet("body { color: #1f2937; background: #ffffff; }")
+        palette = self.editor.palette()
+        from PyQt6.QtGui import QPalette
+        palette.setColor(QPalette.ColorRole.Text, QColor("#1f2937"))
+        palette.setColor(QPalette.ColorRole.Base, QColor("#ffffff"))
+        self.editor.setPalette(palette)
+
         self.editor.currentCharFormatChanged.connect(self._update_toolbar_state)
         layout.addWidget(self.editor)
 

@@ -28,8 +28,10 @@ class VendorTable(QTableWidget):
                 border: 1px solid #d1d5db;
                 border-radius: 6px;
                 background: #ffffff;
+                alternate-background-color: #f9fafb;
                 gridline-color: #f3f4f6;
                 font-size: 13px;
+                color: #1f2937;
             }
             QHeaderView::section {
                 background: #f3f4f6;
@@ -39,7 +41,7 @@ class VendorTable(QTableWidget):
                 font-weight: bold;
                 color: #374151;
             }
-            QTableWidget::item { padding: 4px 8px; }
+            QTableWidget::item { padding: 4px 8px; color: #1f2937; }
             QTableWidget::item:selected { background: #eff6ff; color: #1d4ed8; }
         """)
 
@@ -51,8 +53,11 @@ class VendorTable(QTableWidget):
     def _add_row(self, name: str, email: str, status: str):
         row = self.rowCount()
         self.insertRow(row)
-        self.setItem(row, 0, QTableWidgetItem(name))
-        self.setItem(row, 1, QTableWidgetItem(email))
+        for col, text in enumerate([name, email]):
+            item = QTableWidgetItem(text)
+            item.setForeground(QColor("#1f2937"))
+            item.setBackground(QColor("#ffffff"))
+            self.setItem(row, col, item)
         self._set_status_cell(row, status)
 
     def set_status(self, row: int, status: str):
